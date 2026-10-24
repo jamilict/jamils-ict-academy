@@ -165,6 +165,106 @@
     <p>© 2026 Jamil's ICT Academy</p>
 
 </footer>
+<!-- Student Registration & Login -->
+<section id="student-login" style="max-width:420px;margin:30px auto;padding:20px;border:1px solid #ddd;border-radius:12px;font-family:Arial,sans-serif">
+  <h2 style="text-align:center">Jamil's ICT Academy</h2>
+  <h3>শিক্ষার্থী রেজিস্ট্রেশন</h3>
 
+  <input id="name" placeholder="আপনার নাম" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+  <input id="mobile" placeholder="মোবাইল নম্বর" type="tel" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+  <input id="email" placeholder="ইমেইল" type="email" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+  <input id="password" placeholder="পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)" type="password" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+
+  <button id="register" type="button" onclick="registerStudent()" style="width:100%;padding:12px;background:#1455a0;color:white;border:0;margin:8px 0">রেজিস্ট্রেশন করুন</button>
+
+  <hr>
+
+  <h3>শিক্ষার্থী লগইন</h3>
+  <input id="loginEmail" placeholder="ইমেইল" type="email" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+  <input id="loginPassword" placeholder="পাসওয়ার্ড" type="password" style="width:100%;padding:12px;margin:6px 0;box-sizing:border-box">
+
+  <button type="button" onclick="loginStudent()" style="width:100%;padding:12px;background:#198754;color:white;border:0;margin:8px 0">লগইন করুন</button>
+
+  <p id="message" role="status" aria-live="polite"></p>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://hcklecytpqqwiasnpjzl.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_iG2FrN-n9hR3fo0Ygl5JLQ_w4CLeFR1";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function message(text) {
+  document.getElementById("message").textContent = text;
+}
+
+async function registerStudent() {
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!name || !mobile || !email || password.length < 6) {
+    message("সব তথ্য দিন। পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
+    return;
+  }
+
+  message("রেজিস্ট্রেশন হচ্ছে...");
+
+  try {
+    const { data, error } = await db.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, mobile: mobile }
+      }
+    });
+
+    if (error) throw error;
+
+    if (data.session && data.user) {
+      const { error: profileError } = await db.from("profiles").upsert({
+        id: data.user.id,
+        full_name: name,
+        mobile: mobile
+      });
+
+      if (profileError) throw profileError;
+    }
+
+    message("অ্যাকাউন্ট তৈরি হয়েছে। ইমেইল নিশ্চিত করতে বললে ইমেইল দেখে নির্দেশনা অনুসরণ করুন।");
+  } catch (e) {
+    message("সমস্যা: " + e.message);
+  }
+}
+
+async function loginStudent() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if (!email || !password) {
+    message("ইমেইল ও পাসওয়ার্ড লিখুন।");
+    return;
+  }
+
+  message("লগইন হচ্ছে...");
+
+  try {
+    const { data, error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    message("লগইন সফল! স্বাগতম, " +
+      (data.user.user_metadata.full_name || "শিক্ষার্থী") + "।");
+  } catch (e) {
+    message("লগইন সমস্যা: " + e.message);
+  }
+}
+</script>
 </body>
 </html>
