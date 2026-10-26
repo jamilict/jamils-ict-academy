@@ -272,8 +272,13 @@ async function loginStudent() {
 
     if (error) throw error;
 
-    message("লগইন সফল! স্বাগতম, " +
-      (data.user.user_metadata.full_name || "শিক্ষার্থী") + "।");
+   const studentName = data.user.user_metadata.full_name || "শিক্ষার্থী";
+
+document.getElementById("student-name").textContent = studentName;
+document.getElementById("student-login").style.display = "none";
+document.getElementById("student-dashboard").style.display = "block";
+
+message("");
   } catch (e) {
     message("লগইন সমস্যা: " + e.message);
   }
